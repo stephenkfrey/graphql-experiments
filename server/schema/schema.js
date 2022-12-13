@@ -4,22 +4,29 @@ const {GraphQLObjectType,
     GraphQLString, 
     GraphQLSchema, 
     GraphQLID,
-    GraphQLInt
+    GraphQLInt, 
+    GraphQLList
 } = graphql;
 
 const _ = require('lodash');
 
 // dummy data
 const books = [
-    {name: 'Name of the Wind', genre: 'Fantasy', id: '1'},
-    {name: 'The Final Empire', genre: 'Fantasy', id: '2'},
-    {name: 'The Long Earth', genre: 'Sci-Fi', id: '3'}
+    {name: 'Name of the Wind', genre: 'Fantasy', id: '1', authorId: '1'},
+    {name: 'The Final Empire', genre: 'Fantasy', id: '2', authorId: '2'},
+    {name: 'The Long Earth', genre: 'Sci-Fi', id: '3', authorId: '3'},
+    {name: 'The Hero of Ages', genre: 'Fantasy', id: '4', authorId: '2'},
+    {name: 'The Colour of Magic', genre: 'Fantasy', id: '5', authorId: '3'},
+    {name: 'The Light Fantastic', genre: 'Fantasy', id: '6', authorId: '3'}
 ];
 
-const authors = [
+const authors = [ 
     {name: 'Patrick Rothfuss', age: 44, id: '1'},
     {name: 'Brandon Sanderson', age: 42, id: '2'},
-    {name: 'Terry Pratchett', age: 66, id: '3'}
+    {name: 'Terry Pratchett', age: 66, id: '3'}, 
+    {name: 'Stephen King', age: 72, id: '4'},
+    {name: 'George R. R. Martin', age: 72, id: '5'},
+    {name: 'J. R. R. Tolkien', age: 72, id: '6'}
 ];
 
 
@@ -28,7 +35,14 @@ const BookType = new GraphQLObjectType({
     fields: () => ({
         id: {type: GraphQLID},
         name: {type: GraphQLString},
-        genre: {type: GraphQLString}
+        genre: {type: GraphQLString},
+        author: {
+            type: AuthorType,
+            resolve(parent, args) {
+                console.log(parent);
+                return _.find(authors, {id: parent.authorId});
+            }
+        }
     })
 });
 
@@ -37,9 +51,16 @@ const AuthorType = new GraphQLObjectType({
     fields: () => ({
         id: {type: GraphQLID},
         age: {type: GraphQLInt},
+        name: {type: GraphQLString},
+        books : {
+            type: new GraphQLList(BookType),
+            resolve(parent, args) {
+                // filter the list 'books' by property 'authorId' where it matches 'criteria' ie matches the parent.id  
+                return _.filter(books, {authorId: parent.id});
+            }
+        }
     })
 });
-
 
  const RootQuery = new GraphQLObjectType({
         name: 'RootQueryType',
